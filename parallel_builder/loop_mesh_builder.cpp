@@ -26,7 +26,7 @@ unsigned LoopMeshBuilder::marchCubes(const ParametricScalarField &field)
 
     unsigned totalTriangles = 0;
 
-    //#pragma omp parallel for reduction(+:totalTriangles) schedule(dynamic, 32)
+    #pragma omp parallel for schedule(dynamic, 32) reduction(+:totalTriangles) default(none) shared(field, totalCubesCount)
     for(size_t i = 0; i < totalCubesCount; ++i)
     {
         Vec3_t<float> cubeOffset( i % mGridSize,
@@ -48,8 +48,9 @@ float LoopMeshBuilder::evaluateFieldAt(const Vec3_t<float> &pos, const Parametri
     float value = std::numeric_limits<float>::max();
 
    
-    // #pragma omp parallel for reduction(min:value) schedule(static) 
+   //#pragma omp parallel for schedule(static) reduction(min:value)
     for(unsigned i = 0; i < count; ++i)
+
     {
         float distanceSquared  = (pos.x - pPoints[i].x) * (pos.x - pPoints[i].x);
         distanceSquared       += (pos.y - pPoints[i].y) * (pos.y - pPoints[i].y);
@@ -62,5 +63,6 @@ float LoopMeshBuilder::evaluateFieldAt(const Vec3_t<float> &pos, const Parametri
 
 void LoopMeshBuilder::emitTriangle(const BaseMeshBuilder::Triangle_t &triangle)
 {
+    #pragma omp critical(loop_emitTriangle)
     mTriangles.push_back(triangle);
 }
