@@ -1,0 +1,3 @@
+/mnt/c/Users/poucp/Desktop/schooll/1MIT/AVS_parallerisation/build/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/poucp/Desktop/schooll/1MIT/AVS_parallerisation/build/CMakeFiles/PMC.dir
+/mnt/c/Users/poucp/Desktop/schooll/1MIT/AVS_parallerisation/build/CMakeFiles/edit_cache.dir
