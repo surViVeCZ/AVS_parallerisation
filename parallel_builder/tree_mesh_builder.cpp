@@ -1,11 +1,11 @@
 /**
  * @file    tree_mesh_builder.cpp
  *
- * @author  FULL NAME <xlogin00@stud.fit.vutbr.cz>
+ * @author  Petr Pouč <xpoucp01@stud.fit.vutbr.cz>
  *
  * @brief   Parallel Marching Cubes implementation using OpenMP tasks + octree early elimination
  *
- * @date    DATE
+ * @date    30.11.2022
  **/
 
 #include <iostream>
@@ -41,11 +41,21 @@ unsigned TreeMeshBuilder::triangular_cutter(const ParametricScalarField &field, 
     //cut actual grid to half
     const auto grid_resized = gridSize / 2;
 	
-    //too small grid
-	// if (isBlockEmpty(field, gridSize, offset))
-	// {
-	// 	return 0;
-	// }
+    //too small grid - isosurface is not in this grid
+	if (isBlockEmpty(field, gridSize, offset))
+	{
+        //computing isosurface value in the middle of the grid
+        const Vec3_t<float> midpoint(
+            offset.x * mGridResolution + (gridSize * mGridResolution) / 2,
+            offset.y * mGridResolution + (gridSize * mGridResolution) / 2,
+            offset.z * mGridResolution + (gridSize * mGridResolution) / 2
+        );
+        const float midpoint_value = evaluateFieldAt(midpoint, field);
+        const float empty_block = mIsoLevel + (sqrtf(3.F) / 2.F) * gridSize * mGridResolution;
+        if (midpoint_value > empty_block){
+            return 0;
+        }
+	}
 
     //grid is smaller than minimal grid size, computing triangles
 	if (gridSize <= MIN_GRID)
@@ -65,22 +75,6 @@ unsigned TreeMeshBuilder::triangular_cutter(const ParametricScalarField &field, 
 
 	return totalTriangles;
 }
-
-//TODO: implement this function
-// bool TreeMeshBuilder::isBlockEmpty(const ParametricScalarField &field, const float edgeLength,const Vec3_t<float> &offset)
-// {
-// 	const float resEdgeLength = edgeLength * mGridResolution;
-// 	const float halfEdgeLength = resEdgeLength / 2.F;
-// 	const Vec3_t<float> midPoint(
-// 		offset.x * mGridResolution + halfEdgeLength,
-// 		offset.y * mGridResolution + halfEdgeLength,
-// 		offset.z * mGridResolution + halfEdgeLength
-// 	);
-// 	static const float expr = sqrtf(3.F) / 2.F;
-
-// 	return evaluateFieldAt(midPoint, field) > mIsoLevel + expr * resEdgeLength;
-// }
-
 
 //zde není potřeba nic upravovat
 float TreeMeshBuilder::evaluateFieldAt(const Vec3_t<float> &pos, const ParametricScalarField &field)

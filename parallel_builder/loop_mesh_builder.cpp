@@ -1,11 +1,11 @@
 /**
  * @file    loop_mesh_builder.cpp
  *
- * @author  FULL NAME <xlogin00@stud.fit.vutbr.cz>
+ * @author  Petr Pouč <xpoucp01@stud.fit.vutbr.cz>
  *
  * @brief   Parallel Marching Cubes implementation using OpenMP loops
  *
- * @date    DATE
+ * @date    30.11.2022
  **/
 
 #include <iostream>
@@ -21,7 +21,6 @@ LoopMeshBuilder::LoopMeshBuilder(unsigned gridEdgeSize)
 }
 unsigned LoopMeshBuilder::marchCubes(const ParametricScalarField &field)
 {
-        // 1. Compute total number of cubes in the grid.
     size_t totalCubesCount = mGridSize*mGridSize*mGridSize;
 
     unsigned totalTriangles = 0;
@@ -29,11 +28,7 @@ unsigned LoopMeshBuilder::marchCubes(const ParametricScalarField &field)
     #pragma omp parallel for schedule(dynamic, 32) reduction(+:totalTriangles) default(none) shared(field, totalCubesCount)
     for(size_t i = 0; i < totalCubesCount; ++i)
     {
-        Vec3_t<float> cubeOffset( i % mGridSize,
-                                 (i / mGridSize) % mGridSize,
-                                  i / (mGridSize*mGridSize));
-
-   
+        Vec3_t<float> cubeOffset( i % mGridSize, (i / mGridSize) % mGridSize, i / (mGridSize*mGridSize));
         totalTriangles += buildCube(cubeOffset, field);
     }
 

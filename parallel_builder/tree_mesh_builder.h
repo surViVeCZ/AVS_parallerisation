@@ -1,11 +1,11 @@
 /**
  * @file    tree_mesh_builder.h
  *
- * @author  FULL NAME <xlogin00@stud.fit.vutbr.cz>
+ * @author  Petr Pouč <xpoucp01@stud.fit.vutbr.cz>
  *
  * @brief   Parallel Marching Cubes implementation using OpenMP tasks + octree early elimination
  *
- * @date    DATE
+ * @date    30.11.2022
  **/
 
 #ifndef TREE_MESH_BUILDER_H
@@ -27,7 +27,6 @@ protected:
 
 private:
     unsigned triangular_cutter(const ParametricScalarField &field, const Vec3_t<float> &offset, unsigned gridSize);
-    bool isBlockEmpty(const ParametricScalarField &field, float edgeLength,const Vec3_t<float> &offset);
 };
 
 #endif // TREE_MESH_BUILDER_H
