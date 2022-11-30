@@ -27,7 +27,7 @@ unsigned TreeMeshBuilder::marchCubes(const ParametricScalarField &field)
 
     #pragma omp parallel
     {
-        #pragma omp single
+        #pragma omp single nowait
         {
             totalTriangles = triangular_cutter(field, Vec3_t<float>(), mGridSize);
         }
@@ -41,21 +41,21 @@ unsigned TreeMeshBuilder::triangular_cutter(const ParametricScalarField &field, 
     //cut actual grid to half
     const auto grid_resized = gridSize / 2;
 	
+	
+    //computing isosurface value in the middle of the grid
+    const Vec3_t<float> midpoint(
+        offset.x * mGridResolution + (gridSize * mGridResolution) / 2,
+        offset.y * mGridResolution + (gridSize * mGridResolution) / 2,
+        offset.z * mGridResolution + (gridSize * mGridResolution) / 2
+    );
+    const float midpoint_value = evaluateFieldAt(midpoint, field);
+    const float empty_block = mIsoLevel + (sqrtf(3.F) / 2.F) * gridSize * mGridResolution;
+    
     //too small grid - isosurface is not in this grid
-	if (isBlockEmpty(field, gridSize, offset))
-	{
-        //computing isosurface value in the middle of the grid
-        const Vec3_t<float> midpoint(
-            offset.x * mGridResolution + (gridSize * mGridResolution) / 2,
-            offset.y * mGridResolution + (gridSize * mGridResolution) / 2,
-            offset.z * mGridResolution + (gridSize * mGridResolution) / 2
-        );
-        const float midpoint_value = evaluateFieldAt(midpoint, field);
-        const float empty_block = mIsoLevel + (sqrtf(3.F) / 2.F) * gridSize * mGridResolution;
-        if (midpoint_value > empty_block){
-            return 0;
-        }
-	}
+    if (midpoint_value > empty_block){
+        return 0;
+    }
+	
 
     //grid is smaller than minimal grid size, computing triangles
 	if (gridSize <= MIN_GRID)
@@ -66,13 +66,18 @@ unsigned TreeMeshBuilder::triangular_cutter(const ParametricScalarField &field, 
     //cutting grid into 8 parts
 	for (const Vec3_t<float> vertex_pos : sc_vertexNormPos)
 	{
-        //computing offset for each children
-        const Vec3_t<float> newoffset(offset.x + vertex_pos.x * grid_resized, offset.y + vertex_pos.y * grid_resized, offset.z + vertex_pos.z * grid_resized);
-        //computing triangles for each children
-        const unsigned trianglesCount = triangular_cutter(field, newoffset, grid_resized);
-        totalTriangles += trianglesCount;
+        #pragma omp task default(none) shared(field, totalTriangles, offset, grid_resized) firstprivate(vertex_pos)
+        {
+            //computing offset for each children
+            const Vec3_t<float> newoffset(offset.x + vertex_pos.x * grid_resized, offset.y + vertex_pos.y * grid_resized, offset.z + vertex_pos.z * grid_resized);
+            //computing triangles for each children
+            const unsigned trianglesCount = triangular_cutter(field, newoffset, grid_resized);
+            
+            #pragma omp atomic
+            totalTriangles += trianglesCount;
+        }
 	}
-
+    #pragma omp taskwait
 	return totalTriangles;
 }
 
