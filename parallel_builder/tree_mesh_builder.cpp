@@ -29,13 +29,13 @@ unsigned TreeMeshBuilder::marchCubes(const ParametricScalarField &field)
     {
         #pragma omp single nowait
         {
-            totalTriangles = triangular_cutter(field, Vec3_t<float>(), mGridSize);
+            totalTriangles = decompose(field, Vec3_t<float>(), mGridSize);
         }
     }
     return totalTriangles;
 }
 
-unsigned TreeMeshBuilder::triangular_cutter(const ParametricScalarField &field, const Vec3_t<float> &offset, unsigned gridSize)
+unsigned TreeMeshBuilder::decompose(const ParametricScalarField &field, const Vec3_t<float> &offset, unsigned gridSize)
 {
     unsigned totalTriangles = 0;
     //cut actual grid to half
@@ -71,7 +71,7 @@ unsigned TreeMeshBuilder::triangular_cutter(const ParametricScalarField &field, 
             //computing offset for each children
             const Vec3_t<float> newoffset(offset.x + vertex_pos.x * grid_resized, offset.y + vertex_pos.y * grid_resized, offset.z + vertex_pos.z * grid_resized);
             //computing triangles for each children
-            const unsigned trianglesCount = triangular_cutter(field, newoffset, grid_resized);
+            const unsigned trianglesCount = decompose(field, newoffset, grid_resized);
             
             #pragma omp atomic
             totalTriangles += trianglesCount;

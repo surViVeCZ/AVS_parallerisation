@@ -1,6 +1,6 @@
 Architektury Výpočetních Systémů (AVS 2022)
 Projekt č. 2 (PMC)
-Login: xlogin00
+Login: xpoucp01
 
 Úloha 1: Paralelizace původního řešení
 ===============================================================================
@@ -8,21 +8,41 @@ Login: xlogin00
 1) Kterou ze smyček (viz zadání) je vhodnější paralelizovat a co způsobuje 
    neefektivitu paralelizaci té druhé?
 
+Zkusil jsem paralerizovat obě smyčky, přičemž paralerizace první vykazovala mnohem lepší navýšení výkonu. 
+To je způsobeno tím, že druhá smyčka počítá s pPoints, jejichž hodnota je pro každé vlákno odlišná, nelze je tedy
+zahrnout do shared, což by značně urychlilo výkon. Navíc je smyčka ve funkci evaluateFieldAt volána příliš často. 
+
 2) Jaké plánování (rozdělení práce mezi vlákna) jste zvolili a proč? 
    Jaký vliv má velikost "chunk" při dynamickém plánování (8, 16, 32, 64)?
 
+Plánování jsem zvolil dynamické, které výkonostně předčilo statické. Je to dáno tím, že každé vlákno vyžaduje
+jiné výpočetní náklady (pro prázdné bloky negenerujeme trojúhelníky).
+Velikost chunku vyjma malých hodnot nemá na výkon nějaký vliv, hodnoty chunku 8,16,32,64 vykazovaly stejných hodnot.
+
+
 3) Jakým způsobem zajišťujete ukládání trojúhelníků z několika vláken současně?
+Pomocí kritické sekce, direktivou  #pragma omp critical(loop_emitTriangle)
 
 
 Úloha 2: Paralelní průchod stromem
 ===============================================================================
 
 1) Stručně popište použití OpenMP tasků ve vašem řešení.
+Ve funkci marchCubes volám funkci dexompose, která dělí prostor na 8 částí (8 potomků), volání této 
+funkce obsahauje #pragma omp parallel, umož%nující vykonávání paralérních tásků, v kombinaci s #pragma omp single nowait, 
+která zajistí, že 1 vlákno generuje tasky pro další vlákna. Pro každého potomka je rekurzivně volána funkce decompose.
+Pro efektivnější souběžný zápis, bez konfliktů jsem použil #pragma omp atomic. Před vrácením výsledků čekáme na dokončení podřízených 
+tásků pomocí #pragma omp taskwait
 
 2) Jaký vliv má na vaše řešení tzv. "cut-off"? Je vhodné vytvářet nový 
    task pro každou krychli na nejnižší úrovni?
 
+Pokud hodnota gridsize dosáhne hodnoty cutoff (minimální možná hodnota gridu), nemá cenu již dále
+dělit a počítat. Rovnou tvoříme krychli a vracíme počet trojúhelníků. 
+Na nejnižší úrovni nemá cenu již tvořit nový task, vyhneme se tak prohledávání zbytečných krychlí-> zrychlení výkonu.
+
 3) Jakým způsobem zajišťujete ukládání trojúhelníků z několika vláken současně?
+Stejným způsobem jako v loop_mesh_builder, vzájemným vyloučením z kritické sekce pomocí #pragma omp critical
 
 Úloha 3: Grafy škálování všech řešení
 ===============================================================================

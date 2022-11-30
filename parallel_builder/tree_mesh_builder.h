@@ -26,7 +26,7 @@ protected:
      std::vector<Triangle_t> mTriangles; ///< Temporary array of triangles
 
 private:
-    unsigned triangular_cutter(const ParametricScalarField &field, const Vec3_t<float> &offset, unsigned gridSize);
+    unsigned decompose(const ParametricScalarField &field, const Vec3_t<float> &offset, unsigned gridSize);
 };
 
 #endif // TREE_MESH_BUILDER_H
