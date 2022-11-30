@@ -28,8 +28,8 @@ Pomocí kritické sekce, direktivou  #pragma omp critical(loop_emitTriangle)
 ===============================================================================
 
 1) Stručně popište použití OpenMP tasků ve vašem řešení.
-Ve funkci marchCubes volám funkci dexompose, která dělí prostor na 8 částí (8 potomků), volání této 
-funkce obsahauje #pragma omp parallel, umož%nující vykonávání paralérních tásků, v kombinaci s #pragma omp single nowait, 
+Ve funkci marchCubes volám funkci decompose, která dělí prostor na 8 částí (8 potomků), volání této 
+funkce obsahauje #pragma omp parallel, umožňující vykonávání paralérních tásků, v kombinaci s #pragma omp single nowait, 
 která zajistí, že 1 vlákno generuje tasky pro další vlákna. Pro každého potomka je rekurzivně volána funkce decompose.
 Pro efektivnější souběžný zápis, bez konfliktů jsem použil #pragma omp atomic. Před vrácením výsledků čekáme na dokončení podřízených 
 tásků pomocí #pragma omp taskwait
