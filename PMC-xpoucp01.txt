@@ -63,15 +63,16 @@ Stejným způsobem jako v loop_mesh_builder, vzájemným vyloučením z kritick�
 1) Jaké bylo průměrné využití jader pro všechny tři implementace s omezením na 
    18 vláken? Na kolik procent byly využity?
    
-   ref:
-   loop:
-   tree:
+   ref: 2.8% (0.998)
+   loop: 48.2% (17.364)
+   tree: 44.3% (15.946)
 
 2) Jaké bylo průměrné využití jader pro všechny tři implementace s využitím 
    všech jader? Na kolik procent se podařilo využít obě CPU?
    
-   ref:
-   loop:
-   tree:
+   ref: 2.8% (0.998)
+   loop: 91% (32.774)
+   tree: 76.3% (27.451)
 
 3) Jaké jsou závěry z těchto měření?
+Tree 300ms, Loop 700ms
