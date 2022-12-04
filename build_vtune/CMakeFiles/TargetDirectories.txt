@@ -1,0 +1,3 @@
+/home/xpoucp01/AVS_parallerisation/build_vtune/CMakeFiles/PMC.dir
+/home/xpoucp01/AVS_parallerisation/build_vtune/CMakeFiles/edit_cache.dir
+/home/xpoucp01/AVS_parallerisation/build_vtune/CMakeFiles/rebuild_cache.dir
