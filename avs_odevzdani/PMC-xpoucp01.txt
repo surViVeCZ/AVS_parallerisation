@@ -1,0 +1,102 @@
+Architektury Výpočetních Systémů (AVS 2022)
+Projekt č. 2 (PMC)
+Login: xpoucp01
+
+Úloha 1: Paralelizace původního řešení
+===============================================================================
+
+1) Kterou ze smyček (viz zadání) je vhodnější paralelizovat a co způsobuje 
+   neefektivitu paralelizaci té druhé?
+
+Zkusil jsem paralerizovat obě smyčky, přičemž paralerizace první vykazovala mnohem lepší navýšení výkonu. 
+To je způsobeno tím, že druhá smyčka počítá s pPoints, jejichž hodnota je pro každé vlákno odlišná, nelze je tedy
+zahrnout do shared, což by značně urychlilo výkon. Navíc je smyčka ve funkci evaluateFieldAt volána příliš často. 
+
+2) Jaké plánování (rozdělení práce mezi vlákna) jste zvolili a proč? 
+   Jaký vliv má velikost "chunk" při dynamickém plánování (8, 16, 32, 64)?
+
+Plánování jsem zvolil dynamické, které výkonostně předčilo statické. Je to dáno tím, že každé vlákno vyžaduje
+jiné výpočetní náklady (pro prázdné bloky negenerujeme trojúhelníky).
+Velikost chunku vyjma malých hodnot nemá na výkon nějaký vliv, hodnoty chunku 8,16,32,64 vykazovaly stejných hodnot.
+
+
+3) Jakým způsobem zajišťujete ukládání trojúhelníků z několika vláken současně?
+Pomocí kritické sekce, direktivou  #pragma omp critical(loop_emitTriangle)
+
+
+Úloha 2: Paralelní průchod stromem
+===============================================================================
+
+1) Stručně popište použití OpenMP tasků ve vašem řešení.
+Ve funkci marchCubes volám funkci decompose, která dělí prostor na 8 částí (8 potomků), volání této 
+funkce obsahauje #pragma omp parallel, umožňující vykonávání paralérních tásků, v kombinaci s #pragma omp single nowait, 
+která zajistí, že 1 vlákno generuje tasky pro další vlákna. Pro každého potomka je rekurzivně volána funkce decompose.
+Pro efektivnější souběžný zápis, bez konfliktů jsem použil #pragma omp atomic. Před vrácením výsledků čekáme na dokončení podřízených 
+tásků pomocí #pragma omp taskwait
+
+2) Jaký vliv má na vaše řešení tzv. "cut-off"? Je vhodné vytvářet nový 
+   task pro každou krychli na nejnižší úrovni?
+
+Pokud hodnota gridsize dosáhne hodnoty cutoff (minimální možná hodnota gridu), nemá cenu již dále
+dělit a počítat. Rovnou tvoříme krychli a vracíme počet trojúhelníků. 
+Na nejnižší úrovni nemá cenu již tvořit nový task, vyhneme se tak prohledávání zbytečných krychlí-> zrychlení výkonu.
+
+3) Jakým způsobem zajišťujete ukládání trojúhelníků z několika vláken současně?
+Stejným způsobem jako v loop_mesh_builder, vzájemným vyloučením z kritické sekce pomocí #pragma omp critical
+
+Úloha 3: Grafy škálování všech řešení
+===============================================================================
+
+1) Stručně zhodnoťte efektivitu vytvořených řešení (na základě grafů škálování).
+
+V grafu grid scaling lze vypozorovat, že řešení octree je rychlejší než řešení Loop. 
+Graf silného škálování nám ukazuje, že je paralerizace je efektivní do počtu jader 16, pak 
+se začne projevovat komunikační marže, kdy je komunikace mezi velkým množstvím vláken neefektivní.
+V grafu slabého škálování můžeme vidět u implementace Loop, že se křívky téměř vodorovné, což je očekávaný výsledek,
+při rostoucím využití vláken nám roste objem prráce, při zachování podobného/stjeného času.  U implementace octree křivky
+mírně rostou, ale stále není navýšení času nijak radikální. Opět lze vypozorovat, že od 2^4+ jader se nám začíná projevovat
+komunikační marže mezi vlákny.
+
+2) V jakém případě (v závislosti na počtu bodů ve vstupním souboru a velikosti 
+   mřížky) bude vaše řešení 1. úlohy neefektivní? (pokud takový případ existuje)
+ 
+Díky použití dynamického plánovače by jednotlivá vlákna měly být dobře, rovnoměrně vytíženy, 
+a neefektivní případ tak pak tedy neměl existovat.
+
+
+3) Je (nebo není) stromový algoritmus efektivnější z pohledu slabého škálování 
+   vzhledem ke vstupu?
+
+Algoritmus octree se mi jeví jako efektivní z pohledu slabého i silného škálování. Silné škálování nám jasně ukazuje, že využítím více vláken
+jsme ušetřili dobu výpočtu.
+Pokud by u slabého škálování byla implemetace a paralerizace dokonalá, čas by se vzhledem k počtu vláken a navýšení objemu práce
+neměnil. V mém řešení při použití více vláken a navýšení objemu práce čas výpočtu lehce roste, ale v menším poměru, než je 
+navýšení práce, tedy i z tohoto pohledu se dá stromový algoritmus považovat za efektivní.
+
+4) Jaký je rozdíle mezi silným a slabým škálováním?
+
+Při silném škálování zůstává objem práce stejný, a nás zajímá jakého minimálního času jsme v rámci minimalizace shocpni dosáhnout,
+u slabého pozorujeme navýšení počtu vláken, a tedy i práce za zachování stejného času výpočtu.
+
+Úloha 4: Analýza využití jader pomocí VTune
+================================================================================
+
+1) Jaké bylo průměrné využití jader pro všechny tři implementace s omezením na 
+   18 vláken? Na kolik procent byly využity?
+   
+   ref: 2.8% (0.998)
+   loop: 48.2% (17.364)
+   tree: 44.3% (15.946)
+
+2) Jaké bylo průměrné využití jader pro všechny tři implementace s využitím 
+   všech jader? Na kolik procent se podařilo využít obě CPU?
+   
+   ref: 2.8% (0.998)
+   loop: 91% (32.774)
+   tree: 76.3% (27.451)
+
+3) Jaké jsou závěry z těchto měření?
+
+Z grafů jsme vypozorovali, že škálování octree dopadlo trochu chůře, než škálování loop, může
+za to obtížnější komunikace mezi vlákny a delší doba potřebná k vytvoření jednotlivých tasku. Nicméně je 
+implemetace octree výrazně rychlejší, což potvrzují naměřené hodnoty z aplikace VTune: Tree 300ms, Loop 700ms

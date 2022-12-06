@@ -39,7 +39,7 @@ unsigned TreeMeshBuilder::decompose(const ParametricScalarField &field, const Ve
 {
     unsigned totalTriangles = 0;
     //cut actual grid to half
-    const auto grid_resized = gridSize / 2;
+    auto grid_resized = gridSize / 2;
 	
 	
     //computing isosurface value in the middle of the grid
