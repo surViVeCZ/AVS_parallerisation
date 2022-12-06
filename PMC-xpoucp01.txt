@@ -49,13 +49,34 @@ Stejným způsobem jako v loop_mesh_builder, vzájemným vyloučením z kritick�
 
 1) Stručně zhodnoťte efektivitu vytvořených řešení (na základě grafů škálování).
 
+V grafu grid scaling lze vypozorovat, že řešení octree je rychlejší než řešení Loop. 
+Graf silného škálování nám ukazuje, že je paralerizace je efektivní do počtu jader 16, pak 
+se začne projevovat komunikační marže, kdy je komunikace mezi velkým množstvím vláken neefektivní.
+V grafu slabého škálování můžeme vidět u implementace Loop, že se křívky téměř vodorovné, což je očekávaný výsledek,
+při rostoucím využití vláken nám roste objem prráce, při zachování podobného/stjeného času.  U implementace octree křivky
+mírně rostou, ale stále není navýšení času nijak radikální. Opět lze vypozorovat, že od 2^4+ jader se nám začíná projevovat
+komunikační marže mezi vlákny.
+
 2) V jakém případě (v závislosti na počtu bodů ve vstupním souboru a velikosti 
    mřížky) bude vaše řešení 1. úlohy neefektivní? (pokud takový případ existuje)
+ 
+Díky použití dynamického plánovače by jednotlivá vlákna měly být dobře, rovnoměrně vytíženy, 
+a neefektivní případ tak pak tedy neměl existovat.
+
 
 3) Je (nebo není) stromový algoritmus efektivnější z pohledu slabého škálování 
    vzhledem ke vstupu?
 
+Algoritmus octree se mi jeví jako efektivní z pohledu slabého i silného škálování. Silné škálování nám jasně ukazuje, že využítím více vláken
+jsme ušetřili dobu výpočtu.
+Pokud by u slabého škálování byla implemetace a paralerizace dokonalá, čas by se vzhledem k počtu vláken a navýšení objemu práce
+neměnil. V mém řešení při použití více vláken a navýšení objemu práce čas výpočtu lehce roste, ale v menším poměru, než je 
+navýšení práce, tedy i z tohoto pohledu se dá stromový algoritmus považovat za efektivní.
+
 4) Jaký je rozdíle mezi silným a slabým škálováním?
+
+Při silném škálování zůstává objem práce stejný, a nás zajímá jakého minimálního času jsme v rámci minimalizace shocpni dosáhnout,
+u slabého pozorujeme navýšení počtu vláken, a tedy i práce za zachování stejného času výpočtu.
 
 Úloha 4: Analýza využití jader pomocí VTune
 ================================================================================
@@ -75,4 +96,7 @@ Stejným způsobem jako v loop_mesh_builder, vzájemným vyloučením z kritick�
    tree: 76.3% (27.451)
 
 3) Jaké jsou závěry z těchto měření?
-Tree 300ms, Loop 700ms
+
+Z grafů jsme vypozorovali, že škálování octree dopadlo trochu chůře, než škálování loop, může
+za to obtížnější komunikace mezi vlákny a delší doba potřebná k vytvoření jednotlivých tasku. Nicméně je 
+implemetace octree výrazně rychlejší, což potvrzují naměřené hodnoty z aplikace VTune: Tree 300ms, Loop 700ms

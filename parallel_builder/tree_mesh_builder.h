@@ -23,7 +23,7 @@ protected:
     float evaluateFieldAt(const Vec3_t<float> &pos, const ParametricScalarField &field);
     void emitTriangle(const Triangle_t &triangle);
     const Triangle_t *getTrianglesArray() const { return mTriangles.data();  }
-     std::vector<Triangle_t> mTriangles; ///< Temporary array of triangles
+    std::vector<Triangle_t> mTriangles; ///< Temporary array of triangles
 
 private:
     unsigned decompose(const ParametricScalarField &field, const Vec3_t<float> &offset, unsigned gridSize);
